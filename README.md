@@ -20,8 +20,8 @@ Fooocus Lightning AI를 시작하려면 아래 단계를 따라주세요:
 먼저 저장소를 로컬 컴퓨터에 클론합니다. 터미널을 열고 다음 명령어를 실행하세요:
 
 ```sh
-git clone https://github.com/epic-miner/fooocus-lightning-ai.git
-cd fooocus-lightning-ai
+git clone https://github.com/sol5288/fooocus-lightning.git
+cd fooocus-lightning
 ```
 
 이 명령어는 저장소의 로컬 복사본을 만들고 프로젝트 디렉토리로 이동합니다.
@@ -72,7 +72,7 @@ Fooocus 사용자 인터페이스에서 공백 화면 등의 문제가 발생하
    저장소의 최신 버전을 확보하기 위해 다음과 같이 업데이트하세요:
 
    ```sh
-   cd fooocus-lightning-ai/
+   cd fooocus-lightning/
    git fetch origin main   # 원격 main 브랜치에서 최신 변경사항을 가져옵니다
    git merge origin/main   # 가져온 변경사항을 현재 브랜치에 병합합니다
    ```
