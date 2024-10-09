@@ -100,6 +100,7 @@ Fooocus 사용자 인터페이스에서 공백 화면 등의 문제가 발생하
    ![Fooocus 명령](https://github.com/epic-miner/image/blob/main/Screenshot%202024-07-18%20124827.png)
    ```sh
    cloudflared tunnel --url localhost:7865
+   cloudflared tunnel --url localhost:8888
    ```
 
    이 명령어는 로컬 서버로의 안전한 터널을 생성합니다.
@@ -111,6 +112,16 @@ Fooocus 사용자 인터페이스에서 공백 화면 등의 문제가 발생하
    ![Fooocus 웹 UI](https://github.com/epic-miner/image/blob/main/Screenshot%202024-07-18%20101016.png)
 
    추가 문제가 발생하면 문서를 참조하거나 지원팀에 문의하여 추가 도움을 받으세요.
+
+6. ** 실행 된 프로세스 종료 **
+  - 프로세스 확인 
+   ```sh
+   ps aux | grep python
+   ```
+  - PID 확인 후 프로세스 종료
+   ```sh
+   kill -9 (PID.ex.51189)
+   ```
 
 ## 공백 화면 오류 해결을 위한 비디오 튜토리얼
 
