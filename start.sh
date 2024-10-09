@@ -81,68 +81,111 @@ file_exists() {
 }
 
 # 현재 작업 디렉토리: /Fooocus-API
-# Read paths from config.txt
+# 기본 경로 설정
+DEFAULT_CHECKPOINTS="../Fooocus/models/checkpoints"
+DEFAULT_VAE_APPROX="../Fooocus/models/vae_approx"
+DEFAULT_LORAS="../Fooocus/models/loras"
+
+# config.txt 파일 경로 설정
 config_file="../Fooocus/config.txt"
-if [ -f "$config_file" ]; then
-    path_checkpoints=$(grep '"path_checkpoints":' "$config_file" | cut -d'"' -f4)
-    path_vae_approx=$(grep '"path_vae_approx":' "$config_file" | cut -d'"' -f4)
-    path_loras=$(grep '"path_loras":' "$config_file" | cut -d'"' -f4)
-else
-    echo "Warning: config.txt not found. Using default paths."
-    path_checkpoints="../Fooocus/models/checkpoints"
-    path_vae_approx="../Fooocus/models/vae_approx"
-    path_loras="../Fooocus/models/loras"
-fi
 
-# Copy config.txt from Fooocus to Fooocus-API
-if [ -f "../Fooocus/config.txt" ]; then
-    cp ../Fooocus/config.txt .
-    echo "Copied config.txt from Fooocus to Fooocus-API"
-else
-    echo "Warning: config.txt not found in Fooocus directory"
-fi
+# 경로 설정 함수
+set_paths() {
+    # 기본값으로 시작
+    path_checkpoints="$DEFAULT_CHECKPOINTS"
+    path_vae_approx="$DEFAULT_VAE_APPROX"
+    path_loras="$DEFAULT_LORAS"
 
-# Create directories if they don't exist
-mkdir -p "$path_checkpoints"
-mkdir -p "$path_vae_approx"
-mkdir -p "$path_loras"
+    # config 파일이 존재하면 값을 읽어옴
+    if [ -f "$config_file" ]; then
+        echo "Reading paths from config.txt"
+        
+        local checkpoints_line=$(grep '"path_checkpoints":' "$config_file")
+        local vae_line=$(grep '"path_vae_approx":' "$config_file")
+        local loras_line=$(grep '"path_loras":' "$config_file")
+        
+        # 각 경로를 개별적으로 확인하고 설정
+        if [ ! -z "$checkpoints_line" ]; then
+            local temp_path=$(echo "$checkpoints_line" | cut -d'"' -f4)
+            if [ ! -z "$temp_path" ]; then
+                path_checkpoints="$temp_path"
+            fi
+        fi
+        
+        if [ ! -z "$vae_line" ]; then
+            local temp_path=$(echo "$vae_line" | cut -d'"' -f4)
+            if [ ! -z "$temp_path" ]; then
+                path_vae_approx="$temp_path"
+            fi
+        fi
+        
+        if [ ! -z "$loras_line" ]; then
+            local temp_path=$(echo "$loras_line" | cut -d'"' -f4)
+            if [ ! -z "$temp_path" ]; then
+                path_loras="$temp_path"
+            fi
+        fi
+    else
+        echo "Config file not found. Using default paths."
+    fi
 
-# 변수 값 로그 출력
-echo "Path variables:"
-echo "path_checkpoints: $path_checkpoints"
-echo "path_vae_approx: $path_vae_approx"
-echo "path_loras: $path_loras"
+    # 경로 출력 및 검증
+    echo "Using the following paths:"
+    echo "Checkpoints: $path_checkpoints"
+    echo "VAE Approx: $path_vae_approx"
+    echo "LoRAs: $path_loras"
+}
 
-# 변수 값 검증
-if [ -z "$path_checkpoints" ] || [ -z "$path_vae_approx" ] || [ -z "$path_loras" ]; then
-    echo "Error: One or more path variables are empty. Please check your config.txt file."
+# 경로 설정 함수 호출
+set_paths
+
+# 디렉토리 생성
+create_directories() {
+    for dir in "$path_checkpoints" "$path_vae_approx" "$path_loras"; do
+        if [ ! -z "$dir" ]; then
+            mkdir -p "$dir"
+            if [ $? -ne 0 ]; then
+                echo "Error: Could not create directory: $dir"
+                return 1
+            fi
+        fi
+    done
+    return 0
+}
+
+# 디렉토리 생성 실행
+if ! create_directories; then
+    echo "Error: Failed to create one or more directories. Exiting."
     exit 1
 fi
 
-# Download checkpoints if not exist
-if ! file_exists "$path_checkpoints/juggernautXL_version6Rundiffusion.safetensors"; then
-    wget -P "$path_checkpoints" https://huggingface.co/lllyasviel/fav_models/resolve/main/fav/juggernautXL_version6Rundiffusion.safetensors
-fi
+# 파일 다운로드 함수
+download_files() {
+    # Checkpoints
+    if [ ! -f "$path_checkpoints/juggernautXL_version6Rundiffusion.safetensors" ]; then
+        wget -P "$path_checkpoints" https://huggingface.co/lllyasviel/fav_models/resolve/main/fav/juggernautXL_version6Rundiffusion.safetensors
+    fi
 
-# Download VAE models if not exist
-if ! file_exists "$path_vae_approx/xlvaeapp.pth"; then
-    wget -P "$path_vae_approx" https://huggingface.co/lllyasviel/misc/resolve/main/xlvaeapp.pth
-fi
-if ! file_exists "$path_vae_approx/vaeapp_sd15.pth"; then
-    wget -P "$path_vae_approx" https://huggingface.co/lllyasviel/misc/resolve/main/vaeapp_sd15.pth
-fi
-if ! file_exists "$path_vae_approx/xl-to-v1_interposer-v3.1.safetensors"; then
-    wget -P "$path_vae_approx" https://huggingface.co/lllyasviel/misc/resolve/main/xl-to-v1_interposer-v3.1.safetensors
-fi
+    # VAE models
+    if [ ! -f "$path_vae_approx/xlvaeapp.pth" ]; then
+        wget -P "$path_vae_approx" https://huggingface.co/lllyasviel/misc/resolve/main/xlvaeapp.pth
+    fi
+    if [ ! -f "$path_vae_approx/vaeapp_sd15.pth" ]; then
+        wget -P "$path_vae_approx" https://huggingface.co/lllyasviel/misc/resolve/main/vaeapp_sd15.pth
+    fi
+    if [ ! -f "$path_vae_approx/xl-to-v1_interposer-v3.1.safetensors" ]; then
+        wget -P "$path_vae_approx" https://huggingface.co/lllyasviel/misc/resolve/main/xl-to-v1_interposer-v3.1.safetensors
+    fi
 
-# Download LoRA if not exist
-if ! file_exists "$path_loras/sd_xl_offset_example-lora_1.0.safetensors"; then
-    wget -P "$path_loras" https://huggingface.co/lllyasviel/fav_models/resolve/main/fav/sd_xl_offset_example-lora_1.0.safetensors
-fi
+    # LoRA
+    if [ ! -f "$path_loras/sd_xl_offset_example-lora_1.0.safetensors" ]; then
+        wget -P "$path_loras" https://huggingface.co/lllyasviel/fav_models/resolve/main/fav/sd_xl_offset_example-lora_1.0.safetensors
+    fi
+}
 
-cd ..
+# 파일 다운로드 실행
+download_files
 
-# 현재 작업 디렉토리: /
 # Function to run Fooocus in background
 run_fooocus() {
     conda activate fooocus
@@ -157,7 +200,7 @@ run_fooocus_api() {
     echo "Fooocus-API started in background on port 8888. Check fooocus_api.log for output."
 }
 
-# Run both Fooocus and Fooocus-API in background
+# Run both services
 run_fooocus
 sleep 5  # Give some time for Fooocus to initialize
 run_fooocus_api
