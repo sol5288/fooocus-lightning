@@ -100,30 +100,22 @@ set_paths() {
     if [ -f "$config_file" ]; then
         echo "Reading paths from config.txt"
         
-        local checkpoints_line=$(grep '"path_checkpoints":' "$config_file")
-        local vae_line=$(grep '"path_vae_approx":' "$config_file")
-        local loras_line=$(grep '"path_loras":' "$config_file")
+        # 임시 변수 사용
+        temp_checkpoints=$(grep '"path_checkpoints":' "$config_file" | cut -d'"' -f4)
+        temp_vae=$(grep '"path_vae_approx":' "$config_file" | cut -d'"' -f4)
+        temp_loras=$(grep '"path_loras":' "$config_file" | cut -d'"' -f4)
         
         # 각 경로를 개별적으로 확인하고 설정
-        if [ ! -z "$checkpoints_line" ]; then
-            local temp_path=$(echo "$checkpoints_line" | cut -d'"' -f4)
-            if [ ! -z "$temp_path" ]; then
-                path_checkpoints="$temp_path"
-            fi
+        if [ ! -z "$temp_checkpoints" ]; then
+            path_checkpoints="$temp_checkpoints"
         fi
         
-        if [ ! -z "$vae_line" ]; then
-            local temp_path=$(echo "$vae_line" | cut -d'"' -f4)
-            if [ ! -z "$temp_path" ]; then
-                path_vae_approx="$temp_path"
-            fi
+        if [ ! -z "$temp_vae" ]; then
+            path_vae_approx="$temp_vae"
         fi
         
-        if [ ! -z "$loras_line" ]; then
-            local temp_path=$(echo "$loras_line" | cut -d'"' -f4)
-            if [ ! -z "$temp_path" ]; then
-                path_loras="$temp_path"
-            fi
+        if [ ! -z "$temp_loras" ]; then
+            path_loras="$temp_loras"
         fi
     else
         echo "Config file not found. Using default paths."
@@ -186,23 +178,23 @@ download_files() {
 # 파일 다운로드 실행
 download_files
 
-# Function to run Fooocus in background
+# Fooocus 실행 함수
 run_fooocus() {
     conda activate fooocus
     python Fooocus/entry_with_update.py --always-high-vram > fooocus.log 2>&1 &
     echo "Fooocus started in background. Check fooocus.log for output."
 }
 
-# Function to run Fooocus-API in background
+# Fooocus-API 실행 함수
 run_fooocus_api() {
     conda activate fooocus-api
     python Fooocus-API/main.py --port 8888 > fooocus_api.log 2>&1 &
     echo "Fooocus-API started in background on port 8888. Check fooocus_api.log for output."
 }
 
-# Run both services
+# 서비스 실행
 run_fooocus
-sleep 5  # Give some time for Fooocus to initialize
+sleep 5  # Fooocus 초기화 시간
 run_fooocus_api
 
 echo "Both services are running in the background."
