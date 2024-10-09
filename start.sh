@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# 현재 작업 디렉토리: /
 sudo apt install ufw -y
 sudo ufw allow 7865
 sudo ufw allow 8888  # Fooocus-API 포트 추가
@@ -13,6 +14,7 @@ check_cloudflared() {
 # Set this variable to false to ensure installation in permanent storage.
 install_in_temp_dir=false
 
+# 현재 작업 디렉토리: /
 # Check if Cloudflared is already installed
 if ! check_cloudflared; then
     # Download and setup Cloudflared
@@ -23,6 +25,7 @@ else
     echo "Cloudflared is already installed. Skipping installation."
 fi
 
+# 현재 작업 디렉토리: /
 # Check if the Fooocus repository exists, if not clone it
 if [ ! -d "Fooocus" ]; then
     git clone https://github.com/lllyasviel/Fooocus.git
@@ -30,6 +33,7 @@ fi
 cd Fooocus
 git pull
 
+# 현재 작업 디렉토리: /Fooocus
 # Set the installation folder
 echo "Installation folder: ~/.conda/envs/fooocus"
 if [ -L ~/.conda/envs/fooocus ]; then
@@ -53,6 +57,7 @@ else
     rm -rf ~/.cache/pip
 fi
 
+# 현재 작업 디렉토리: /Fooocus
 # Clone and setup Fooocus-API
 cd ..
 if [ ! -d "Fooocus-API" ]; then
@@ -61,6 +66,7 @@ fi
 cd Fooocus-API
 git pull
 
+# 현재 작업 디렉토리: /Fooocus-API
 # Create and activate Fooocus-API environment
 conda env create -f environment.yaml
 conda activate fooocus-api
@@ -74,6 +80,7 @@ file_exists() {
     [ -f "$1" ]
 }
 
+# 현재 작업 디렉토리: /Fooocus-API
 # Read paths from config.txt
 config_file="../Fooocus/config.txt"
 if [ -f "$config_file" ]; then
@@ -82,9 +89,9 @@ if [ -f "$config_file" ]; then
     path_loras=$(grep '"path_loras":' "$config_file" | cut -d'"' -f4)
 else
     echo "Warning: config.txt not found. Using default paths."
-    path_checkpoints="repositories/Fooocus/models/checkpoints"
-    path_vae_approx="repositories/Fooocus/models/vae_approx"
-    path_loras="repositories/Fooocus/models/loras"
+    path_checkpoints="../Fooocus/models/checkpoints"
+    path_vae_approx="../Fooocus/models/vae_approx"
+    path_loras="../Fooocus/models/loras"
 fi
 
 # Copy config.txt from Fooocus to Fooocus-API
@@ -99,6 +106,18 @@ fi
 mkdir -p "$path_checkpoints"
 mkdir -p "$path_vae_approx"
 mkdir -p "$path_loras"
+
+# 변수 값 로그 출력
+echo "Path variables:"
+echo "path_checkpoints: $path_checkpoints"
+echo "path_vae_approx: $path_vae_approx"
+echo "path_loras: $path_loras"
+
+# 변수 값 검증
+if [ -z "$path_checkpoints" ] || [ -z "$path_vae_approx" ] || [ -z "$path_loras" ]; then
+    echo "Error: One or more path variables are empty. Please check your config.txt file."
+    exit 1
+fi
 
 # Download checkpoints if not exist
 if ! file_exists "$path_checkpoints/juggernautXL_version6Rundiffusion.safetensors"; then
@@ -123,6 +142,7 @@ fi
 
 cd ..
 
+# 현재 작업 디렉토리: /
 # Function to run Fooocus in background
 run_fooocus() {
     conda activate fooocus
