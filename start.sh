@@ -146,16 +146,23 @@ cd ..
 # Function to run Fooocus in background
 run_fooocus() {
     conda activate fooocus
-    python Fooocus/entry_with_update.py --always-high-vram &
+    python Fooocus/entry_with_update.py --always-high-vram > fooocus.log 2>&1 &
+    echo "Fooocus started in background. Check fooocus.log for output."
 }
 
-# Function to run Fooocus-API
+# Function to run Fooocus-API in background
 run_fooocus_api() {
     conda activate fooocus-api
-    python Fooocus-API/main.py --port 8888  # 명시적으로 8888 포트 지정
+    python Fooocus-API/main.py --port 8888 > fooocus_api.log 2>&1 &
+    echo "Fooocus-API started in background on port 8888. Check fooocus_api.log for output."
 }
 
-# Run both Fooocus and Fooocus-API
+# Run both Fooocus and Fooocus-API in background
 run_fooocus
-echo "Starting Fooocus-API..."
+sleep 5  # Give some time for Fooocus to initialize
 run_fooocus_api
+
+echo "Both services are running in the background."
+echo "To check their status, use:"
+echo "  tail -f fooocus.log     # for Fooocus logs"
+echo "  tail -f fooocus_api.log # for Fooocus-API logs"
